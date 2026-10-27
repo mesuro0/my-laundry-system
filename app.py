@@ -74,8 +74,8 @@ with tab1:
                 if not c_phone:
                     st.error("❌ 請輸入手機號碼")
                 else:
-                    if not df_cust.empty and c_phone in df_cust["手機號碼"].values:
-                        idx = df_cust[df_cust["手機號碼"] == c_phone].index
+                    if not df_cust.empty and str(c_phone) in df_cust["手機號碼"].values:
+                        idx = df_cust[df_cust["手機號碼"] == str(c_phone)].index
                         df_cust.at[idx[0], "儲值餘額"] += amount
                         name_to_show = df_cust.at[idx[0], "顧客姓名"]
                         st.success(f"✅ 儲值成功！{name_to_show} 目前餘額：${df_cust.at[idx[0], '儲值餘額']} 元")
@@ -113,7 +113,7 @@ with tab1:
                     st.error("❌ 請輸入手機號碼！")
                 else:
                     can_order = True
-                    cust_idx = df_cust[df_cust["手機號碼"] == o_phone].index if not df_cust.empty else []
+                    cust_idx = df_cust[df_cust["手機號碼"] == str(o_phone)].index if not df_cust.empty else []
                     
                     if pay_method == "儲值金扣款":
                         if len(cust_idx) == 0:
@@ -135,7 +135,7 @@ with tab1:
                         
                         new_order = {
                             "訂單編號": order_id, "日期": today_str, "顧客姓名": final_name,
-                            "手機號碼": o_phone, "衣服項目": selected_item, "數量": quantity,
+                            "手機號碼": str(o_phone), "衣服項目": selected_item, "數量": quantity,
                             "總金額": total_price, "目前狀態": "待清洗", "付款方式": pay_method
                         }
                         df_orders = pd.concat([df_orders, pd.DataFrame([new_order])], ignore_index=True)
@@ -192,24 +192,21 @@ with tab2:
                 st.write(f"電話：{row['手機號碼']} ｜ 金額：${row['總金額']} ({row['付款方式']})")
                 cc1, cc2, cc3, cc4 = st.columns(4)
                 if cc1.button("設為：待清洗", key=f"w_{row['訂單編號']}"):
+                    df_orders.at[index, "currently"] = "待清洗"
                     df_orders.at[index, "目前狀態"] = "待清洗"
                     df_orders.to_csv(ORDERS_FILE, index=False)
                     st.rerun()
                 if cc2.button("設為：清洗中", key=f"s_{row['訂單編號']}"):
+                    df_orders.at[index, "currently"] = "清洗中"
+                    df_orders.at[index, "currently"] = "清洗中"
                     df_orders.at[index, "目前狀態"] = "清洗中"
                     df_orders.to_csv(ORDERS_FILE, index=False)
                     st.rerun()
                 if cc3.button("設為：已完成", key=f"d_{row['訂單編號']}"):
+                    df_orders.at[index, "currently"] = "已完成（待取）"
                     df_orders.at[index, "目前狀態"] = "已完成（待取）"
                     df_orders.to_csv(ORDERS_FILE, index=False)
                     st.rerun()
                 if cc4.button("顧客已取件", key=f"p_{row['訂單編號']}"):
                     df_orders.at[index, "currently"] = "已取件"
                     df_orders.at[index, "目前狀態"] = "已取件"
-                    df_orders.to_csv(ORDERS_FILE, index=False)
-                    st.rerun()
-
-with tab3:
-    st.header("🔍 客戶歷史檔案與對帳查詢")
-    search_phone = st.text_input("輸入客戶手機號碼進行查詢：", key="search_bar").strip()
-    if search_phone:
