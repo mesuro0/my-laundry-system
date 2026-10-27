@@ -214,21 +214,4 @@ with tab3:
         c_name_match, c_bal_match = get_customer_info(search_phone)
         if c_name_match:
             st.subheader(f"👤 會員：{c_name_match}")
-請謹慎使用程式碼。
-st.metric("可用餘額", f"${c_bal_match} 元")
-client_history = df_orders[df_orders["手機號碼"] == search_phone]
-if client_history.empty:
-st.info("該客戶沒有任何歷史消費或洗衣紀錄。")
-else:
-sub_tab1, sub_tab2 = st.tabs(["👕 歷史洗衣進度檔案", "💵 取件與付款扣款明細"])
-with sub_tab1:
-st.dataframe(client_history[["日期", "訂單編號", "衣服項目", "數量", "目前狀態"]].sort_values(by="日期", ascending=False), use_container_width=True, hide_index=True)
-with sub_tab2:
-st.dataframe(client_history[["日期", "訂單編號", "總金額", "付款方式", "目前狀態"]].sort_values(by="日期", ascending=False), use_container_width=True, hide_index=True)
 
-*(註：這段程式碼我順便修正了前一次裡面一兩個打錯的小字母，用這段會最順暢！)*
-
-<FollowUp>
-將這段程式碼完整複製並貼到 GitHub 的大框框中後，請按下綠色的 **`Commit changes...`** 按鈕儲存。
-儲存好之後再告訴我，我們一起進行下一步！
-</FollowUp>
