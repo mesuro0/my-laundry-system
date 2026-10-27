@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import datetime
@@ -17,7 +16,6 @@ if not st.session_state.authenticated:
     password = st.text_input("請輸入密碼：", type="password")
     login_btn = st.button("登入系統")
     
-    # 預設密碼是 1234，你可以自行修改下方數字
     if login_btn:
         if password == "1234":  
             st.session_state.authenticated = True
@@ -35,6 +33,7 @@ PRICE_LIST = {
     "一般襯衫/T恤": 50, "長褲/牛仔褲": 60, "厚外套/大衣": 150, "床單/被套": 200, "毛毯/特殊材質": 300
 }
 
+# --- 初始化檔案與資料讀取 ---
 if os.path.exists(ORDERS_FILE):
     df_orders = pd.read_csv(ORDERS_FILE)
     df_orders["手機號碼"] = df_orders["手機號碼"].astype(str)
@@ -50,7 +49,10 @@ else:
 if "receipt_data" not in st.session_state:
     st.session_state.receipt_data = None
 
+# --- 輔助函式：取得客戶資訊 ---
 def get_customer_info(phone):
+    if df_cust.empty:
+        return None, 0
     match = df_cust[df_cust["手機號碼"] == str(phone)]
     if not match.empty:
         return match.iloc[0]["顧客姓名"], match.iloc[0]["儲值餘額"]
@@ -72,8 +74,8 @@ with tab1:
                 if not c_phone:
                     st.error("❌ 請輸入手機號碼")
                 else:
-                    idx = df_cust[df_cust["手機號碼"] == c_phone].index
-                    if len(idx) > 0:
+                    if not df_cust.empty and c_phone in df_cust["手機號碼"].values:
+                        idx = df_cust[df_cust["手機號碼"] == c_phone].index
                         df_cust.at[idx[0], "儲值餘額"] += amount
                         name_to_show = df_cust.at[idx[0], "顧客姓名"]
                         st.success(f"✅ 儲值成功！{name_to_show} 目前餘額：${df_cust.at[idx[0], '儲值餘額']} 元")
@@ -81,7 +83,7 @@ with tab1:
                         if not c_name:
                             st.error("❌ 新客戶請填寫姓名以進行開戶")
                         else:
-                            new_c = {"手機號碼": c_phone, "顧客姓名": c_name, "儲值餘額": amount}
+                            new_c = {"手機號碼": str(c_phone), "顧客姓名": c_name, "儲值餘額": int(amount)}
                             df_cust = pd.concat([df_cust, pd.DataFrame([new_c])], ignore_index=True)
                             st.success(f"🎉 開戶成功！{c_name} 目前餘額：${amount} 元")
                     df_cust.to_csv(CUSTOMERS_FILE, index=False)
@@ -111,7 +113,7 @@ with tab1:
                     st.error("❌ 請輸入手機號碼！")
                 else:
                     can_order = True
-                    cust_idx = df_cust[df_cust["手機號碼"] == o_phone].index
+                    cust_idx = df_cust[df_cust["手機號碼"] == o_phone].index if not df_cust.empty else []
                     
                     if pay_method == "儲值金扣款":
                         if len(cust_idx) == 0:
@@ -211,7 +213,3 @@ with tab3:
     st.header("🔍 客戶歷史檔案與對帳查詢")
     search_phone = st.text_input("輸入客戶手機號碼進行查詢：", key="search_bar").strip()
     if search_phone:
-        c_name_match, c_bal_match = get_customer_info(search_phone)
-        if c_name_match:
-            st.subheader(f"👤 會員：{c_name_match}")
-
